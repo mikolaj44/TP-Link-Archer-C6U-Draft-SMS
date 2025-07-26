@@ -1,8 +1,8 @@
 from re import search
 from requests import post
-from tplinkrouterc6u.common.package_enum import Connection
-from tplinkrouterc6u.common.exception import ClientException
-from tplinkrouterc6u.client.c6u import TplinkBaseRouter
+from tplinkrouterc6udraftsms.common.package_enum import Connection
+from tplinkrouterc6udraftsms.common.exception import ClientException
+from tplinkrouterc6udraftsms.client.c6u import TplinkBaseRouter
 
 
 class TplinkC5400XRouter(TplinkBaseRouter):

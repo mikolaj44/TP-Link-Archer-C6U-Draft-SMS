@@ -1,8 +1,8 @@
 from re import search
 from requests import post, Response
-from tplinkrouterc6u.common.encryption import EncryptionWrapper
-from tplinkrouterc6u.common.exception import ClientException, AuthorizeError
-from tplinkrouterc6u.client.c5400x import TplinkC5400XRouter
+from tplinkrouterc6udraftsms.common.encryption import EncryptionWrapper
+from tplinkrouterc6udraftsms.common.exception import ClientException, AuthorizeError
+from tplinkrouterc6udraftsms.client.c5400x import TplinkC5400XRouter
 
 
 class TplinkC1200Router(TplinkC5400XRouter):

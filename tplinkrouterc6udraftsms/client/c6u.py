@@ -6,10 +6,10 @@ from requests import post, Response
 from macaddress import EUI48
 from ipaddress import IPv4Address
 from logging import Logger
-from tplinkrouterc6u.common.helper import get_ip, get_mac
-from tplinkrouterc6u.common.encryption import EncryptionWrapper
-from tplinkrouterc6u.common.package_enum import Connection, VPN
-from tplinkrouterc6u.common.dataclass import (
+from tplinkrouterc6udraftsms.common.helper import get_ip, get_mac
+from tplinkrouterc6udraftsms.common.encryption import EncryptionWrapper
+from tplinkrouterc6udraftsms.common.package_enum import Connection, VPN
+from tplinkrouterc6udraftsms.common.dataclass import (
     Firmware,
     Status,
     Device,
@@ -18,8 +18,8 @@ from tplinkrouterc6u.common.dataclass import (
     IPv4Status,
     VPNStatus,
 )
-from tplinkrouterc6u.common.exception import ClientException, ClientError
-from tplinkrouterc6u.client_abstract import AbstractRouter
+from tplinkrouterc6udraftsms.common.exception import ClientException, ClientError
+from tplinkrouterc6udraftsms.client_abstract import AbstractRouter
 from abc import abstractmethod
 
 

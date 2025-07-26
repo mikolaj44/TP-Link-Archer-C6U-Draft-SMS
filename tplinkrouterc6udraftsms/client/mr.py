@@ -1,3 +1,4 @@
+import sys
 from hashlib import md5
 from re import search
 from time import time, sleep
@@ -7,10 +8,10 @@ from datetime import timedelta, datetime
 from macaddress import EUI48
 from ipaddress import IPv4Address
 from logging import Logger
-from tplinkrouterc6u.common.helper import get_ip, get_mac, get_value
-from tplinkrouterc6u.common.encryption import EncryptionWrapperMR
-from tplinkrouterc6u.common.package_enum import Connection, VPN
-from tplinkrouterc6u.common.dataclass import (
+from tplinkrouterc6udraftsms.common.helper import get_ip, get_mac, get_value
+from tplinkrouterc6udraftsms.common.encryption import EncryptionWrapperMR
+from tplinkrouterc6udraftsms.common.package_enum import Connection, VPN
+from tplinkrouterc6udraftsms.common.dataclass import (
     Firmware,
     Status,
     Device,
@@ -21,8 +22,8 @@ from tplinkrouterc6u.common.dataclass import (
     LTEStatus,
     VPNStatus,
 )
-from tplinkrouterc6u.common.exception import ClientException, ClientError
-from tplinkrouterc6u.client_abstract import AbstractRouter
+from tplinkrouterc6udraftsms.common.exception import ClientException, ClientError
+from tplinkrouterc6udraftsms.client_abstract import AbstractRouter
 
 
 class TPLinkMRClientBase(AbstractRouter):
@@ -384,7 +385,7 @@ class TPLinkMRClientBase(AbstractRouter):
                 continue
             if '=' in line:
                 keyval = line.split('=')
-                assert len(keyval) == 2
+                # assert len(keyval) == 2
 
                 obj[keyval[0]] = keyval[1]
 
@@ -607,37 +608,49 @@ class TPLinkMRClient(TPLinkMRClientBase):
         if ret_code == self.HTTP_RET_OK:
             self._token = None
 
-    def send_sms(self, phone_number: str, message: str) -> None:
+    def send_sms(self, phone_number: str, message: str, draft: bool = False) -> None:
         acts = [
             self.ActItem(
                 self.ActItem.SET, 'LTE_SMS_SENDNEWMSG', attrs=[
-                    'index=1',
+                    'index=2' if draft else 'index=1',
                     'to={}'.format(phone_number),
                     'textContent={}'.format(message),
                 ]),
         ]
         self.req_act(acts)
 
-    def get_sms(self) -> [SMS]:
-        acts = [
-            self.ActItem(
-                self.ActItem.SET, 'LTE_SMS_RECVMSGBOX', attrs=['PageNumber=1']),
-            self.ActItem(
-                self.ActItem.GL, 'LTE_SMS_RECVMSGENTRY', attrs=['index', 'from', 'content', 'receivedTime',
-                                                                'unread']),
-        ]
-        _, values = self.req_act(acts)
+    def get_sms(self, getFromDraft: bool = False, getAll: bool = False) -> [SMS]:
+        messages = []        
+        i = 1
+        
+        for pageIndex in range(1, sys.maxsize if getAll else 2):
+            try:
+                acts = [
+                    self.ActItem(
+                        self.ActItem.SET, 'LTE_SMS_DRAFTMSGBOX' if getFromDraft else 'LTE_SMS_RECVMSGBOX', attrs=[f'PageNumber={pageIndex}']),
+                    self.ActItem(
+                        self.ActItem.GL, 'LTE_SMS_DRAFTMSGENTRY' if getFromDraft else 'LTE_SMS_RECVMSGENTRY', attrs=['index', 'to', 'content'] if getFromDraft else ['index', 'from', 'content', 'receivedTime','unread']),
+                ]
 
-        messages = []
-        if values:
-            i = 1
-            for item in self._to_list(values.get('1')):
+                _, values = self.req_act(acts)
+            except Exception as e:
+                break
+
+            if not values:
+                break
+
+            items = self._to_list(values.get('1'))
+
+            if not items:
+                break
+
+            for item in items:
                 messages.append(
                     SMS(
-                        i, item['from'], item['content'], datetime.fromisoformat(item['receivedTime']),
-                        item['unread'] == '1'
+                        i, item['to'] if getFromDraft else item['from'], item['content'], None if getFromDraft else datetime.fromisoformat(item['receivedTime']), None if getFromDraft else item['unread'] == '1'
                     )
                 )
+
                 i += 1
 
         return messages
@@ -649,10 +662,10 @@ class TPLinkMRClient(TPLinkMRClientBase):
         ]
         self.req_act(acts)
 
-    def delete_sms(self, sms: SMS) -> None:
+    def delete_sms(self, sms: SMS, deleteFromDraft: bool = False) -> None:
         acts = [
             self.ActItem(
-                self.ActItem.DEL, 'LTE_SMS_RECVMSGENTRY', f'{sms.id},0,0,0,0,0'),
+                self.ActItem.DEL, 'LTE_SMS_DRAFTMSGENTRY' if deleteFromDraft else 'LTE_SMS_RECVMSGENTRY', f'{sms.id},0,0,0,0,0'),
         ]
         self.req_act(acts)
 

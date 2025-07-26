@@ -1,17 +1,17 @@
 from logging import Logger
 
-from tplinkrouterc6u import TPLinkXDRClient
-from tplinkrouterc6u.common.exception import ClientException
-from tplinkrouterc6u.client.c6u import TplinkRouter
-from tplinkrouterc6u.client.deco import TPLinkDecoClient
-from tplinkrouterc6u.client_abstract import AbstractRouter
-from tplinkrouterc6u.client.mr import TPLinkMRClient
-from tplinkrouterc6u.client.ex import TPLinkEXClient
-from tplinkrouterc6u.client.c5400x import TplinkC5400XRouter
-from tplinkrouterc6u.client.c1200 import TplinkC1200Router
-from tplinkrouterc6u.client.c80 import TplinkC80Router
-from tplinkrouterc6u.client.vr import TPLinkVRClient
-from tplinkrouterc6u.client.wdr import TplinkWDRRouter
+from tplinkrouterc6udraftsms import TPLinkXDRClient
+from tplinkrouterc6udraftsms.common.exception import ClientException
+from tplinkrouterc6udraftsms.client.c6u import TplinkRouter
+from tplinkrouterc6udraftsms.client.deco import TPLinkDecoClient
+from tplinkrouterc6udraftsms.client_abstract import AbstractRouter
+from tplinkrouterc6udraftsms.client.mr import TPLinkMRClient
+from tplinkrouterc6udraftsms.client.ex import TPLinkEXClient
+from tplinkrouterc6udraftsms.client.c5400x import TplinkC5400XRouter
+from tplinkrouterc6udraftsms.client.c1200 import TplinkC1200Router
+from tplinkrouterc6udraftsms.client.c80 import TplinkC80Router
+from tplinkrouterc6udraftsms.client.vr import TPLinkVRClient
+from tplinkrouterc6udraftsms.client.wdr import TplinkWDRRouter
 
 
 class TplinkRouterProvider:

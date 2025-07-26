@@ -6,13 +6,13 @@ from urllib.parse import unquote
 from macaddress import EUI48
 from requests import Session
 
-from tplinkrouterc6u.client_abstract import AbstractRouter
-from tplinkrouterc6u.common.dataclass import (Device, Firmware, IPv4DHCPLease,
+from tplinkrouterc6udraftsms.client_abstract import AbstractRouter
+from tplinkrouterc6udraftsms.common.dataclass import (Device, Firmware, IPv4DHCPLease,
                                               IPv4Reservation, IPv4Status,
                                               Status)
-from tplinkrouterc6u.common.exception import ClientException
-from tplinkrouterc6u.common.helper import get_ip, get_mac, get_value
-from tplinkrouterc6u.common.package_enum import Connection
+from tplinkrouterc6udraftsms.common.exception import ClientException
+from tplinkrouterc6udraftsms.common.helper import get_ip, get_mac, get_value
+from tplinkrouterc6udraftsms.common.package_enum import Connection
 
 
 class TPLinkXDRClient(AbstractRouter):

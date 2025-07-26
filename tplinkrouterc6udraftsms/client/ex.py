@@ -4,9 +4,9 @@ from datetime import timedelta
 from macaddress import EUI48
 from ipaddress import IPv4Address
 from logging import Logger
-from tplinkrouterc6u.common.package_enum import Connection, VPN
-from tplinkrouterc6u.common.helper import get_ip, get_mac, get_value
-from tplinkrouterc6u.common.dataclass import (
+from tplinkrouterc6udraftsms.common.package_enum import Connection, VPN
+from tplinkrouterc6udraftsms.common.helper import get_ip, get_mac, get_value
+from tplinkrouterc6udraftsms.common.dataclass import (
     Firmware,
     Status,
     Device,
@@ -14,8 +14,8 @@ from tplinkrouterc6u.common.dataclass import (
     IPv4DHCPLease,
     IPv4Status,
     VPNStatus)
-from tplinkrouterc6u.common.exception import ClientException, ClientError
-from tplinkrouterc6u.client.mr import TPLinkMRClientBase
+from tplinkrouterc6udraftsms.common.exception import ClientException, ClientError
+from tplinkrouterc6udraftsms.client.mr import TPLinkMRClientBase
 
 
 class TPLinkEXClient(TPLinkMRClientBase):

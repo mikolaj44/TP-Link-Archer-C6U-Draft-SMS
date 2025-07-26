@@ -5,11 +5,11 @@ from collections.abc import Callable
 from macaddress import EUI48
 from ipaddress import IPv4Address
 from logging import Logger
-from tplinkrouterc6u.common.helper import get_ip, get_mac, get_value
-from tplinkrouterc6u.common.package_enum import Connection
-from tplinkrouterc6u.common.dataclass import Firmware, Status, Device, IPv4Status
-from tplinkrouterc6u.client_abstract import AbstractRouter
-from tplinkrouterc6u.client.c6u import TplinkEncryption
+from tplinkrouterc6udraftsms.common.helper import get_ip, get_mac, get_value
+from tplinkrouterc6udraftsms.common.package_enum import Connection
+from tplinkrouterc6udraftsms.common.dataclass import Firmware, Status, Device, IPv4Status
+from tplinkrouterc6udraftsms.client_abstract import AbstractRouter
+from tplinkrouterc6udraftsms.client.c6u import TplinkEncryption
 
 
 class TPLinkDecoClient(TplinkEncryption, AbstractRouter):

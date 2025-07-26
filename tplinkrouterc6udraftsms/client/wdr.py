@@ -3,10 +3,10 @@ from ipaddress import IPv4Address
 from requests import get, Response
 from logging import Logger
 from macaddress import EUI48
-from tplinkrouterc6u.common.helper import get_ip
-from tplinkrouterc6u.common.package_enum import Connection
-from tplinkrouterc6u.common.exception import ClientError
-from tplinkrouterc6u.common.dataclass import (
+from tplinkrouterc6udraftsms.common.helper import get_ip
+from tplinkrouterc6udraftsms.common.package_enum import Connection
+from tplinkrouterc6udraftsms.common.exception import ClientError
+from tplinkrouterc6udraftsms.common.dataclass import (
     Firmware,
     Status,
     Device,
@@ -14,7 +14,7 @@ from tplinkrouterc6u.common.dataclass import (
     IPv4DHCPLease,
     IPv4Status,
 )
-from tplinkrouterc6u.client_abstract import AbstractRouter
+from tplinkrouterc6udraftsms.client_abstract import AbstractRouter
 
 from dataclasses import dataclass
 from html.parser import HTMLParser
