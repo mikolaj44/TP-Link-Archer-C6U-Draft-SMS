@@ -663,6 +663,8 @@ class TPLinkMRClient(TPLinkMRClientBase):
         self.req_act(acts)
 
     def delete_sms(self, sms: SMS, deleteFromDraft: bool = False) -> None:
+        self.get_sms(getFromDraft=deleteFromDraft, getAll=False)
+
         acts = [
             self.ActItem(
                 self.ActItem.DEL, 'LTE_SMS_DRAFTMSGENTRY' if deleteFromDraft else 'LTE_SMS_RECVMSGENTRY', f'{sms.id},0,0,0,0,0'),
