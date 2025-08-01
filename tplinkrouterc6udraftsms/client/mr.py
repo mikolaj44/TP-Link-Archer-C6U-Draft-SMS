@@ -698,8 +698,8 @@ class TPLinkMRClient(TPLinkMRClientBase):
         self.req_act(acts)
 
     # Delete a single SMS from the first page (received or drafted inboxes)
-    def delete_sms(self, smsIndex: int, deleteFromDraft: bool = False) -> bool:
-        if(self.get_sms(getFromDraft=deleteFromDraft, getAll=False) == []):
+    def delete_sms(self, pageIndex: int = 1, smsIndex: int = 1, deleteFromDraft: bool = False) -> bool:
+        if(self.get_sms(getFromDraft=deleteFromDraft, getAll=False, pageIndex=pageIndex) == []):
             return False
 
         if(deleteFromDraft):
