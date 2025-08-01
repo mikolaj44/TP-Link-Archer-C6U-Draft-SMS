@@ -324,6 +324,20 @@ class TPLinkMRClientBase(AbstractRouter):
 
         self.req_act(acts)
 
+    def req_act_string(self, actString: str):
+        url = self._get_url('cgi_gdpr')
+        (code, response) = self._request(url, data_str=actString, encrypt=True)
+
+        if code != 200:
+            error = 'TplinkRouter - MR -  Response with error; Request {} - Response {}'.format(actString, response)
+            if self._logger:
+                self._logger.debug(error)
+            raise ClientError(error)
+
+        result = self._merge_response(response)
+
+        return response, result.get('0') if len(result) == 1 and result.get('0') else result
+
     def req_act(self, acts: list):
         '''
         Requests ACTs via the cgi_gdpr proxy
@@ -589,7 +603,6 @@ class TPLinkMRClientBase(AbstractRouter):
 
 
 class TPLinkMRClient(TPLinkMRClientBase):
-
     def logout(self) -> None:
         '''
         Logs out from the host
@@ -608,31 +621,26 @@ class TPLinkMRClient(TPLinkMRClientBase):
         if ret_code == self.HTTP_RET_OK:
             self._token = None
 
-    def send_sms(self, phone_number: str, message: str, draft: bool = False) -> None:
-        acts = [
-            self.ActItem(
-                self.ActItem.SET, 'LTE_SMS_SENDNEWMSG', attrs=[
-                    'index=2' if draft else 'index=1',
-                    'to={}'.format(phone_number),
-                    'textContent={}'.format(message),
-                ]),
-        ]
-        self.req_act(acts)
+    # Send or draft multiple messages to a number
+    def send_sms(self, phone_number: str, messages: list[str], draft: bool = False) -> None:
+        if(draft):
+            for message in messages:
+                self.req_act_string(f"2\r\n[LTE_SMS_SENDNEWMSG#0,0,0,0,0,0#0,0,0,0,0,0]0,3\r\nindex=2\r\nto={phone_number}\r\ntextContent={message}\r\n")
+        else:
+            for message in messages:
+                self.req_act_string(f"2\r\n[LTE_SMS_SENDNEWMSG#0,0,0,0,0,0#0,0,0,0,0,0]0,3\r\nindex=1\r\nto={phone_number}\r\ntextContent={message}\r\n")
 
-    def get_sms(self, getFromDraft: bool = False, getAll: bool = False) -> [SMS]:
+    # Get N-th received/drafted SMS page or all SMS-es
+    def get_sms(self, getFromDraft: bool = False, getAll = False, pageIndex: int = 1) -> list[SMS]:
         messages = []        
         i = 1
         
-        for pageIndex in range(1, sys.maxsize if getAll else 2):
+        for pageIndex in range(1 if getAll else pageIndex, sys.maxsize if getAll else pageIndex + 1):
             try:
-                acts = [
-                    self.ActItem(
-                        self.ActItem.SET, 'LTE_SMS_DRAFTMSGBOX' if getFromDraft else 'LTE_SMS_RECVMSGBOX', attrs=[f'PageNumber={pageIndex}']),
-                    self.ActItem(
-                        self.ActItem.GL, 'LTE_SMS_DRAFTMSGENTRY' if getFromDraft else 'LTE_SMS_RECVMSGENTRY', attrs=['index', 'to', 'content'] if getFromDraft else ['index', 'from', 'content', 'receivedTime','unread']),
-                ]
-
-                _, values = self.req_act(acts)
+                if(getFromDraft):
+                    _, values = self.req_act_string(f"2&5\r\n[LTE_SMS_DRAFTMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber={pageIndex}\r\n[LTE_SMS_DRAFTMSGENTRY#0,0,0,0,0,0#0,0,0,0,0,0]1,3\r\nindex\r\nto\r\ncontent\r\n")
+                else:
+                    _, values = self.req_act_string(f"2&5\r\n[LTE_SMS_RECVMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber={pageIndex}\r\n[LTE_SMS_RECVMSGENTRY#0,0,0,0,0,0#0,0,0,0,0,0]1,5\r\nindex\r\nfrom\r\ncontent\r\nreceivedTime\r\nunread\r\n")
             except Exception as e:
                 break
 
@@ -654,22 +662,61 @@ class TPLinkMRClient(TPLinkMRClientBase):
                 i += 1
 
         return messages
+    
+    # Same thing as above but optimized for getting only the contents
+    def get_sms_content(self, getFromDraft: bool = False, getAll = False, pageIndex: int = 1) -> list[str]:
+        strings = []        
 
-    def set_sms_read(self, sms: SMS) -> None:
+        for pageIndex in range(1 if getAll else pageIndex, sys.maxsize if getAll else pageIndex + 1):
+            try:
+                if(getFromDraft):
+                    _, values = self.req_act_string(f"2&5\r\n[LTE_SMS_DRAFTMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber={pageIndex}\r\n[LTE_SMS_DRAFTMSGENTRY#0,0,0,0,0,0#0,0,0,0,0,0]1,3\r\nindex\r\nto\r\ncontent\r\n")
+                else:
+                    _, values = self.req_act_string(f"2&5\r\n[LTE_SMS_RECVMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber={pageIndex}\r\n[LTE_SMS_RECVMSGENTRY#0,0,0,0,0,0#0,0,0,0,0,0]1,5\r\nindex\r\nfrom\r\ncontent\r\nreceivedTime\r\nunread\r\n")
+            except Exception as e:
+                break
+
+            if not values:
+                break
+
+            items = self._to_list(values.get('1'))
+
+            if not items:
+                break
+
+            for item in items:
+                strings.append(item['content'])
+
+        return strings
+
+    # Set a single SMS to read (received inbox)
+    def set_sms_read(self, smsIndex: int) -> None:
         acts = [
             self.ActItem(
-                self.ActItem.SET, 'LTE_SMS_RECVMSGENTRY', f'{sms.id},0,0,0,0,0', attrs=['unread=0']),
+                self.ActItem.SET, 'LTE_SMS_RECVMSGENTRY', f'{smsIndex},0,0,0,0,0', attrs=['unread=0']),
         ]
         self.req_act(acts)
 
-    def delete_sms(self, sms: SMS, deleteFromDraft: bool = False) -> None:
-        self.get_sms(getFromDraft=deleteFromDraft, getAll=False)
+    # Delete a single SMS from the first page (received or drafted inboxes)
+    def delete_sms(self, smsIndex: int, deleteFromDraft: bool = False) -> bool:
+        if(self.get_sms(getFromDraft=deleteFromDraft, getAll=False) == []):
+            return False
 
-        acts = [
-            self.ActItem(
-                self.ActItem.DEL, 'LTE_SMS_DRAFTMSGENTRY' if deleteFromDraft else 'LTE_SMS_RECVMSGENTRY', f'{sms.id},0,0,0,0,0'),
-        ]
-        self.req_act(acts)
+        if(deleteFromDraft):
+            self.req_act_string(f"4\r\n[LTE_SMS_DRAFTMSGENTRY#{smsIndex},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+        else:
+            self.req_act_string(f"4\r\n[LTE_SMS_RECVMSGENTRY#{smsIndex},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+
+        return True
+
+    def delete_sms_page(self, pageIndex: int, maxMessagesPerPage: int, deleteFromDraft: bool = False) -> bool:
+        if(self.get_sms(getFromDraft=True, getAll=False, pageIndex=pageIndex) == []):
+            return False
+
+        for i in range(1, maxMessagesPerPage + 1):
+            self.req_act_string(f"4\r\n[LTE_SMS_DRAFTMSGENTRY#{i},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+
+        return True
 
     def send_ussd(self, command: str) -> str:
         acts = [
