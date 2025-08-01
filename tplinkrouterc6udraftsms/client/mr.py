@@ -704,18 +704,31 @@ class TPLinkMRClient(TPLinkMRClientBase):
 
         if(deleteFromDraft):
             self.req_act_string(f"4\r\n[LTE_SMS_DRAFTMSGENTRY#{smsIndex},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+            self.req_act_string("2\r\n[LTE_SMS_DRAFTMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber=0\r\n")
+            self.req_act_string("1\r\n[LTE_SMS_DRAFTMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\ntotalNumber\r\n")
         else:
             self.req_act_string(f"4\r\n[LTE_SMS_RECVMSGENTRY#{smsIndex},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+            self.req_act_string("2\r\n[LTE_SMS_RECVMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber=0\r\n")
+            self.req_act_string("1\r\n[LTE_SMS_RECVMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\ntotalNumber\r\n")
 
         return True
 
     def delete_sms_page(self, pageIndex: int, maxMessagesPerPage: int, deleteFromDraft: bool = False) -> bool:
-        if(self.get_sms(getFromDraft=True, getAll=False, pageIndex=pageIndex) == []):
+        if(self.get_sms(getFromDraft=deleteFromDraft, getAll=False, pageIndex=pageIndex) == []):
             return False
 
-        for i in range(1, maxMessagesPerPage + 1):
-            self.req_act_string(f"4\r\n[LTE_SMS_DRAFTMSGENTRY#{i},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+        if(deleteFromDraft):
+            for i in range(1, maxMessagesPerPage + 1):
+                self.req_act_string(f"4\r\n[LTE_SMS_DRAFTMSGENTRY#{i},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
 
+            self.req_act_string("2\r\n[LTE_SMS_DRAFTMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber=0\r\n")
+            self.req_act_string("1\r\n[LTE_SMS_DRAFTMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\ntotalNumber\r\n")
+        else:
+            for i in range(1, maxMessagesPerPage + 1):
+                self.req_act_string(f"4\r\n[LTE_SMS_RECVMSGENTRY#{i},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+
+            self.req_act_string("2\r\n[LTE_SMS_RECVMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\nPageNumber=0\r\n")
+            self.req_act_string("1\r\n[LTE_SMS_RECVMSGBOX#0,0,0,0,0,0#0,0,0,0,0,0]0,1\r\ntotalNumber\r\n")
         return True
 
     def send_ussd(self, command: str) -> str:
