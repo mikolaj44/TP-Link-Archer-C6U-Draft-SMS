@@ -730,7 +730,7 @@ class TPLinkMRClient(TPLinkMRClientBase):
                 last_sms_index_on_page = min(end_sms_index, ((ceildiv(sms_index, max_messages_per_page)) * max_messages_per_page))
 
                 while(sms_index <= last_sms_index_on_page):
-                    self.req_act_string(f"4\r\n[{message_box_name}#{sms_index % max_messages_per_page + 1},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+                    self.req_act_string(f"4\r\n[{message_box_name}#{sms_index % max_messages_per_page},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
                     sms_index += 1
 
             return True
