@@ -4,14 +4,13 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="tplinkrouterc6u",
-    version="5.9.3",
-    author="Alex Erohin",
-    author_email="alexanderErohin@yandex.ru",
+    name="tplinkrouterc6udraftsms",
+    version="1.0",
+    author="mikolaj44",
     description="TP-Link Router API (supports also Mercusys Router)",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/AlexandrErohin/TP-Link-Archer-C6U",
+    url="https://github.com/mikolaj44/TP-Link-Archer-C6U-Draft-SMS",
     packages=setuptools.find_packages(),
     classifiers=[
         "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
