@@ -1,4 +1,5 @@
 import sys
+import tqdm
 from hashlib import md5
 from re import search
 from time import time, sleep
@@ -333,7 +334,7 @@ class TPLinkMRClientBase(AbstractRouter):
             if self._logger:
                 self._logger.debug(error)
             raise ClientError(error)
-
+                
         result = self._merge_response(response)
 
         return response, result.get('0') if len(result) == 1 and result.get('0') else result
@@ -398,8 +399,11 @@ class TPLinkMRClientBase(AbstractRouter):
                         result[index] = obj
                 continue
             if '=' in line:
-                keyval = line.split('=')
-                # assert len(keyval) == 2
+                if line[:7] == "content":
+                    keyval = ["content", line[8:]]
+                else:
+                    keyval = line.split('=')
+                    assert len(keyval) == 2
 
                 obj[keyval[0]] = keyval[1]
 
@@ -622,12 +626,12 @@ class TPLinkMRClient(TPLinkMRClientBase):
             self._token = None
 
     # Send or draft multiple messages to a number
-    def send_sms(self, phone_number: str, messages: list[str], draft: bool = False) -> None:
+    def send_sms(self, phone_number: str, messages: list[str], draft: bool = False, enable_tqdm: bool = False) -> None:
         if(draft):
-            for message in messages:
+            for message in (tqdm.tqdm(messages) if enable_tqdm else messages):
                 self.req_act_string(f"2\r\n[LTE_SMS_SENDNEWMSG#0,0,0,0,0,0#0,0,0,0,0,0]0,3\r\nindex=2\r\nto={phone_number}\r\ntextContent={message}\r\n")
         else:
-            for message in messages:
+            for message in (tqdm.tqdm(messages) if enable_tqdm else messages):
                 self.req_act_string(f"2\r\n[LTE_SMS_SENDNEWMSG#0,0,0,0,0,0#0,0,0,0,0,0]0,3\r\nindex=1\r\nto={phone_number}\r\ntextContent={message}\r\n")
 
     # Get N-th SMS page or all SMS-es (received or drafted inbox)
