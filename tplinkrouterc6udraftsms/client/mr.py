@@ -635,7 +635,7 @@ class TPLinkMRClient(TPLinkMRClientBase):
                 self.req_act_string(f"2\r\n[LTE_SMS_SENDNEWMSG#0,0,0,0,0,0#0,0,0,0,0,0]0,3\r\nindex=1\r\nto={phone_number}\r\ntextContent={message}\r\n")
 
     # Get N-th SMS page or all SMS-es (received or drafted inbox)
-    def get_sms(self, get_from_draft: bool = False, get_all = False, page_index: int = 1) -> list[SMS]:
+    def get_sms(self, get_from_draft: bool = False, get_all: bool = False, page_index: int = 1) -> list[SMS]:
         messages = []        
         i = 1
         
@@ -695,7 +695,7 @@ class TPLinkMRClient(TPLinkMRClientBase):
 
     # Set a single SMS to read (received inbox)
     def set_sms_read(self, page_index: int = 1, sms_index: int = 1) -> None:
-        if(self.get_sms(get_from_draft=False, get_all=False, page_index=page_index) == []):
+        if(self.get_sms_content(get_from_draft=False, get_all=False, page_index=page_index) == []):
             return False
         
         acts = [
@@ -706,7 +706,7 @@ class TPLinkMRClient(TPLinkMRClientBase):
 
     # Delete a single SMS from the first page (received or drafted inbox)
     def delete_sms(self, page_index: int = 1, sms_index: int = 1, delete_from_draft: bool = False) -> bool:
-        if(self.get_sms(get_from_draft=delete_from_draft, get_all=False, page_index=page_index) == []):
+        if(self.get_sms_content(get_from_draft=delete_from_draft, get_all=False, page_index=page_index) == []):
             return False
 
         if(delete_from_draft):
@@ -720,30 +720,39 @@ class TPLinkMRClient(TPLinkMRClientBase):
 
         return True
     
-    # Delete SMSes in a specified range (received or drafted inbox), returns False even if some messages couldn't be deleted
-    def delete_smses(self, start_sms_index: int, num_smses: int, max_messages_per_page: int, delete_from_draft: bool = False) -> bool:
+    # Delete SMSes in a specified range (received or drafted inbox), returns False if it failed to remove some messages
+    def delete_smses(self, start_sms_index: int, num_smses: int, max_messages_per_page: int, delete_from_draft: bool = False, enable_tqdm: bool = False) -> bool:
         def main_loop(message_box_name: str) -> bool:
-            end_sms_index = start_sms_index + num_smses - 1
+            sms_index = start_sms_index + num_smses - 1
 
-            sms_index = start_sms_index
+            if(enable_tqdm):
+                progress_bar = tqdm.tqdm(total=num_smses)
 
-            while(sms_index <= end_sms_index):
-                if(self.get_sms(get_from_draft=delete_from_draft, get_all=False, page_index=ceildiv(sms_index, max_messages_per_page)) == []):
+            while(sms_index >= start_sms_index):
+                page_index = ceildiv(sms_index, max_messages_per_page)
+
+                if(self.get_sms_content(get_from_draft=delete_from_draft, get_all=False, page_index=page_index) == []):
                     return False
                 
-                last_sms_index_on_page = min(end_sms_index, ((ceildiv(sms_index, max_messages_per_page)) * max_messages_per_page))
+                first_page_message_index = (page_index - 1) * max_messages_per_page + 1
+                
+                while(sms_index >= first_page_message_index and sms_index >= start_sms_index):
+                    self.req_act_string(f"4\r\n[{message_box_name}#{(sms_index - 1) % max_messages_per_page + 1},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
+                    sms_index -= 1
 
-                while(sms_index <= last_sms_index_on_page):
-                    self.req_act_string(f"4\r\n[{message_box_name}#{sms_index % max_messages_per_page},0,0,0,0,0#0,0,0,0,0,0]0,0\r\n")
-                    sms_index += 1
+                    if(enable_tqdm):
+                        progress_bar.update(1)
+
+            if(enable_tqdm):
+                progress_bar.close()
 
             return True
         
         return main_loop("LTE_SMS_DRAFTMSGENTRY" if delete_from_draft else "LTE_SMS_RECVMSGENTRY")
-
+    
     # Delete an entire SMS page (received or drafted inbox)
     def delete_sms_page(self, page_index: int, max_messages_per_page: int, delete_from_draft: bool = False) -> bool:
-        if(self.get_sms(get_from_draft=delete_from_draft, get_all=False, page_index=page_index) == []):
+        if(self.get_sms_content(get_from_draft=delete_from_draft, get_all=False, page_index=page_index) == []):
             return False
 
         if(delete_from_draft):

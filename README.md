@@ -1,4 +1,6 @@
-# This fork adds support for saving, getting and deleting draft SMS messages - you can also get all messages, not just from the first page - I added the details in the function tables. This functionality was tested on a TL-MR150 v2 with firmare 1.3.0 0.9.1 v0001.0 Build 220315.
+# This fork adds support for saving, getting and deleting draft SMS messages. It fixes some bugs related to working with messages, improves performance of some existing SMS functions and introduces a couple new features - you can find the details in the 'Functions' table. These functionalities were tested (although not extensively) on a TL-MR150 v2 with firmare 1.3.0 0.9.1 v0001.0 Build 220315.
+
+# The rest of README is left unchanged except for the 'Functions' table
 
 # TP-Link Router API (supports also Mercusys Router)
 Python package for API access and management for TP-Link and Mercusys Routers. See [Supported routers](#supports)
@@ -96,11 +98,14 @@ or you have TP-link C5400X or similar router you need to get web encrypted passw
 | logout |   | logout after all is done |
 | get_vpn_status |   | Gets VPN info for OpenVPN and PPTPVPN and connected clients amount | [VPNStatus](#vpn_status) |
 | set_vpn | vpn: [VPNStatus](#vpn_status), enable: bool | Allow to turn on/of VPN |   |
-| send_sms | phone_number: str, message: str, draft: bool | Send or draft sms for LTE routers |   |
+| send_sms | phone_number: str, message: str, draft: bool, enable_tqdm: bool | Send or draft sms for LTE routers |   |
 | send_ussd | command: str | Send USSD command for LTE routers | str |
-| get_sms | getFromDraft: bool, getAll: bool | Get either received or drafted sms messages from the first page or all of them for LTE routers | [[SMS]](#sms) |
-| set_sms_read | sms: [SMS](#sms) | Set sms message read from the first page for LTE routers |   |
-| delete_sms | sms: [SMS](#sms), deleteFromDraft: bool | Delete sms message from the first page for LTE routers - received or drafted |   |
+| get_sms | get_from_draft: bool, get_all: bool, page_index: int | Get either received or drafted sms messages from the first page or all of them for LTE routers | [[SMS]](#sms) |
+| get_sms_content | get_from_draft: bool, get_all: bool, page_index: int | Same thing as above but gets just the messages | [str] |
+| set_sms_read | page_index: int, sms_index: int | Set sms message to read on a page for LTE routers |   |
+| delete_sms | page_index: int, sms_index: int, delete_from_draft: bool | Delete sms message from a page for LTE routers - received or drafted |   |
+| delete_sms_page | page_index: int, max_messages_per_page: int, delete_from_draft: bool | Delete an entire sms page for LTE routers - received or drafted |   |
+| delete_smses | start_sms_index: int, num_smses: int, max_messages_per_page: int, delete_from_draft: bool, enable_tqdm: bool | Delete a range of smses for LTE routers - received or drafted |   |
 | get_lte_status | | Get lte info for LTE routers | [LTEStatus](#lte_status)  |
 
 ## Dataclass

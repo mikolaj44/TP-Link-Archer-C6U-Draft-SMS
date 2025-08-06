@@ -22,6 +22,6 @@ setuptools.setup(
         "Programming Language :: Python :: 3.13",
         "Programming Language :: Python :: Implementation :: PyPy",
     ],
-    install_requires=['requests', 'pycryptodome', 'macaddress'],
+    install_requires=['requests', 'pycryptodome', 'macaddress', 'tqdm'],
     python_requires='>=3.10',
 )
